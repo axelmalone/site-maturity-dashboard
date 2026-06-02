@@ -20,7 +20,7 @@ Vault (sibling, separate concern): `/Users/axelmalone/Claude/Second Brain/`
 | # | Step | Status |
 |---|---|---|
 | 1 | Strategic thesis + README (10 sections, ~650 words) | ✅ DONE — DO NOT REWRITE without explicit ask |
-| 2 | Schema (7 tables) + seed (128 rows, sanity-verified) | ✅ DONE — DO NOT REWRITE without explicit ask |
+| 2 | Schema (7 tables) + seed (126 rows, sanity-verified) | ✅ DONE — DO NOT REWRITE without explicit ask |
 | 3 | Project scaffolding (Next.js + Tailwind + Shadcn + better-sqlite3 + OpenAI SDK + Railway) | ⏳ NEXT |
 | 4 | Dashboard core build | Sat 2026-06-06 |
 | 5 | Agent layer with 7-question test battery | Sun 2026-06-07 |
@@ -52,7 +52,7 @@ The agent layer uses OpenAI's GPT-5 mini (`gpt-5-mini`) via the OpenAI SDK, serv
 
 1. **`README.md`** — Strategic thesis, four-phase model, 7-question agent test battery, what-this-tool-does bullets. **READ THIS FIRST.** The dashboard exists to operationalise everything in here. Every feature you build should map to a bullet or section in this file.
 2. **`db/schema.sql`** — 7-table schema with CHECK constraints + FK refs + 10 indexes
-3. **`db/seed.sql`** — 128 rows: 10 sites, 13 robots, 30 shifts, 26 incidents, 15 customer concerns, 22 phase transitions, 12 phase blockers
+3. **`db/seed.sql`** — 126 rows: 10 sites, 13 robots, 30 shifts, 26 incidents, 15 customer concerns, 22 phase transitions, 10 phase blockers. Site 5 (Tesco Express Clapham Junction) is the deliberately seeded "ready to progress" demo site — fully meets Phase 3 entry criteria (62 days in Phase 2, 91% autonomy, 100% remote resolution), so the readiness surface fires a green state. Tesco Metro Holborn (site 9) remains the diagnostic example: blocked from Phase 4 by its 2026-05-10 critical incident inside the 30-day window.
 
 **Vault notes (full strategic context, NOT in this repo — read with `Read` tool by absolute path):**
 - `/Users/axelmalone/Claude/Second Brain/02 Projects/Job Hunt/Paddington Robotics/Paddington Robotics — Application Answers.md` (full prototype scope incl. agent test battery + tech stack rationale)

@@ -6,7 +6,7 @@
 --
 -- Phase distribution:
 --   Phase 1: 3 sites (sites 1-3, deployed last 30 days)
---   Phase 2: 3 sites (sites 4-6, deployed 30-90 days ago)
+--   Phase 2: 3 sites (sites 4-6, deployed roughly 30-95 days ago)
 --   Phase 3: 3 sites (sites 7-9, deployed 90-200 days ago)
 --   Phase 4: 1 site  (site 10, deployed ~300 days ago)
 --
@@ -21,7 +21,7 @@ INSERT INTO sites (site_id, customer_name, store_format, site_name, city, area, 
   ( 2, 'Sainsbury''s','Local',      'Sainsbury''s Local Camden Town',   'London', 'Camden Town',      '2026-05-20', 1, 16),
   ( 3, 'Co-op',       'Food',       'Co-op Notting Hill',                'London', 'Notting Hill',     '2026-05-25', 1, 18),
   ( 4, 'Waitrose',    'Food',       'Waitrose Marylebone',               'London', 'Marylebone',       '2026-04-04', 2, 14),
-  ( 5, 'Tesco',       'Express',    'Tesco Express Clapham Junction',    'London', 'Clapham Junction', '2026-03-14', 2, 18),
+  ( 5, 'Tesco',       'Express',    'Tesco Express Clapham Junction',    'London', 'Clapham Junction', '2026-03-01', 2, 18),
   ( 6, 'M&S',         'Food',       'M&S Food Bayswater',                'London', 'Bayswater',        '2026-04-19', 2, 18),
   ( 7, 'Waitrose',    'Food',       'Waitrose Belsize Park',             'London', 'Belsize Park',     '2025-12-09', 3, 14),
   ( 8, 'Sainsbury''s','Central',    'Sainsbury''s Central Victoria',     'London', 'Victoria',         '2026-01-02', 3, 24),
@@ -38,7 +38,7 @@ INSERT INTO robots (robot_id, site_id, model, deployment_date, status, autonomy_
   ( 2,  2, 'PA-2', '2026-05-20', 'operational',  0.58, '2026-05-28'),
   ( 3,  3, 'PA-2', '2026-05-25', 'operational',  0.41, '2026-05-29'),
   ( 4,  4, 'PA-2', '2026-04-04', 'operational',  0.83, '2026-05-15'),
-  ( 5,  5, 'PA-2', '2026-03-14', 'operational',  0.85, '2026-05-20'),
+  ( 5,  5, 'PA-2', '2026-03-01', 'operational',  0.91, '2026-05-20'),
   ( 6,  6, 'PA-2', '2026-04-19', 'operational',  0.81, '2026-05-25'),
   ( 7,  7, 'PA-1', '2025-12-09', 'operational',  0.89, '2026-04-10'),
   ( 8,  7, 'PA-2', '2026-03-15', 'operational',  0.94, '2026-05-02'),
@@ -59,8 +59,8 @@ INSERT INTO phase_transitions (transition_id, site_id, from_phase, to_phase, tra
   -- Phase 2 sites: initial + P1→P2
   ( 4,  4, NULL, 1, '2026-04-04', NULL),
   ( 5,  4, 1,    2, '2026-05-09', 35),
-  ( 6,  5, NULL, 1, '2026-03-14', NULL),
-  ( 7,  5, 1,    2, '2026-04-16', 33),
+  ( 6,  5, NULL, 1, '2026-03-01', NULL),
+  ( 7,  5, 1,    2, '2026-04-01', 31),
   ( 8,  6, NULL, 1, '2026-04-19', NULL),
   ( 9,  6, 1,    2, '2026-05-22', 33),
   -- Phase 3 sites: initial + P1→P2 + P2→P3
@@ -80,7 +80,8 @@ INSERT INTO phase_transitions (transition_id, site_id, from_phase, to_phase, tra
   (22, 10, 3,    4, '2026-04-19', 139);
 
 -- -----------------------------------------------------------------------------
--- phase_blockers (12 rows — what's stopping each non-Phase-4 site from progressing)
+-- phase_blockers (10 rows — what's stopping each non-Phase-4 site from progressing)
+-- Site 5 (Clapham Junction) has cleared its blockers and is now eligible for Phase 3.
 -- -----------------------------------------------------------------------------
 INSERT INTO phase_blockers (blocker_id, site_id, blocker_description, target_metric, current_value, required_value, estimated_resolution_date, created_date) VALUES
   ( 1,  1, 'Autonomy below 0.80 threshold for Phase 2 entry',                    'autonomy_score',             '0.62', '0.80', '2026-06-20', '2026-05-13'),
@@ -88,8 +89,6 @@ INSERT INTO phase_blockers (blocker_id, site_id, blocker_description, target_met
   ( 3,  3, '30-day operating minimum not yet reached',                            'days_operating',             '8',    '30',   '2026-06-24', '2026-05-25'),
   ( 4,  3, 'Autonomy below 0.80 threshold for Phase 2 entry',                    'autonomy_score',             '0.41', '0.80', '2026-07-15', '2026-05-25'),
   ( 5,  4, 'Remote resolution rate below 50% threshold for Phase 3 entry',       'remote_resolution_rate',     '0.40', '0.50', '2026-06-30', '2026-05-09'),
-  ( 6,  5, 'Autonomy below 0.90 threshold for Phase 3 entry',                    'autonomy_score',             '0.85', '0.90', '2026-06-25', '2026-04-16'),
-  ( 7,  5, 'Less than 60 days in Phase 2 (Phase 3 entry criterion)',             'days_in_current_phase',      '47',   '60',   '2026-06-15', '2026-04-16'),
   ( 8,  6, 'Less than 60 days in Phase 2 (Phase 3 entry criterion)',             'days_in_current_phase',      '11',   '60',   '2026-07-21', '2026-05-22'),
   ( 9,  7, 'Autonomy below 0.95 threshold for Phase 4 entry',                    'autonomy_score',             '0.92', '0.95', '2026-07-15', '2026-04-13'),
   (10,  8, 'Less than 90 days in Phase 3 (Phase 4 entry criterion)',             'days_in_current_phase',      '47',   '90',   '2026-07-15', '2026-04-16'),
@@ -228,6 +227,6 @@ INSERT INTO shifts (shift_id, date, site_id, shift_type, team_member, duration_h
 --   incidents:            26
 --   customer_concerns:    15
 --   phase_transitions:    22
---   phase_blockers:       12
---   TOTAL ROWS:          128
+--   phase_blockers:       10
+--   TOTAL ROWS:          126
 -- =============================================================================
