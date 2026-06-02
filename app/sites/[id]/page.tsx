@@ -139,7 +139,7 @@ export default async function SiteDetailPage({
 
       {/* Robots */}
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Robots</h2>
+        <h2 className="text-lg font-semibold">Robots ({robots.length})</h2>
         <div className="rounded-lg border">
           <Table>
             <TableHeader>

@@ -23,6 +23,7 @@ type SortKey =
   | "area"
   | "current_phase"
   | "daysInCurrentPhase"
+  | "robotCount"
   | "avgAutonomy"
   | "openBlockers";
 
@@ -32,6 +33,7 @@ const COLUMNS: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: "area", label: "Area" },
   { key: "current_phase", label: "Phase", numeric: true },
   { key: "daysInCurrentPhase", label: "Days in phase", numeric: true },
+  { key: "robotCount", label: "Robots", numeric: true },
   { key: "avgAutonomy", label: "Avg autonomy", numeric: true },
   { key: "openBlockers", label: "Blockers", numeric: true },
 ];
@@ -114,6 +116,9 @@ export function SitesTable({ sites }: { sites: SiteSummary[] }) {
             </TableCell>
             <TableCell className="text-right tabular-nums">
               {site.daysInCurrentPhase}
+            </TableCell>
+            <TableCell className="text-right tabular-nums">
+              {site.robotCount}
             </TableCell>
             <TableCell className="text-right tabular-nums">
               {formatPercent(site.avgAutonomy)}

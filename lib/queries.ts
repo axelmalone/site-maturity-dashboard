@@ -16,6 +16,7 @@ export interface SiteSummary {
   area: string;
   current_phase: number;
   deployment_date: string;
+  robotCount: number;
   daysOperating: number;
   daysInCurrentPhase: number;
   avgAutonomy: number;
@@ -35,6 +36,7 @@ interface SiteAggregateRow {
   current_phase: number;
   deployment_date: string;
   phase_entry_date: string | null;
+  robot_count: number;
   avg_autonomy: number | null;
   open_concerns: number;
   open_blockers: number;
@@ -55,6 +57,8 @@ const SITE_AGGREGATE_SQL = `
     s.deployment_date,
     (SELECT MAX(pt.transition_date) FROM phase_transitions pt
        WHERE pt.site_id = s.site_id AND pt.to_phase = s.current_phase) AS phase_entry_date,
+    (SELECT COUNT(*) FROM robots r
+       WHERE r.site_id = s.site_id) AS robot_count,
     (SELECT AVG(r.autonomy_score) FROM robots r
        WHERE r.site_id = s.site_id) AS avg_autonomy,
     (SELECT COUNT(*) FROM customer_concerns cc
@@ -99,6 +103,7 @@ function toSummary(row: SiteAggregateRow): SiteSummary {
     area: row.area,
     current_phase: row.current_phase,
     deployment_date: row.deployment_date,
+    robotCount: row.robot_count,
     daysOperating,
     daysInCurrentPhase,
     avgAutonomy,
