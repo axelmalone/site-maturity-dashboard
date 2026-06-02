@@ -297,3 +297,174 @@ export function getAllBlockers(): BlockerWithSite[] {
     })
     .sort((a, b) => b.proximity - a.proximity);
 }
+
+// Compact, fully-grounded snapshot of the whole dataset for the agent.
+// Everything the model is allowed to reason over lives here.
+export function getAgentContext() {
+  const db = getDb();
+  const summaries = getSiteSummaries();
+
+  const robots = db
+    .prepare(
+      `SELECT site_id, robot_id, model, status, autonomy_score, last_incident_date
+         FROM robots ORDER BY robot_id`
+    )
+    .all() as (Robot & { site_id: number })[];
+
+  const blockers = db
+    .prepare(
+      `SELECT site_id, blocker_description, target_metric, current_value,
+              required_value, estimated_resolution_date
+         FROM phase_blockers ORDER BY blocker_id`
+    )
+    .all() as (Pick<
+    Blocker,
+    | "blocker_description"
+    | "target_metric"
+    | "current_value"
+    | "required_value"
+    | "estimated_resolution_date"
+  > & { site_id: number })[];
+
+  const concerns = db
+    .prepare(
+      `SELECT site_id, raised_date, raised_by, description, severity, status
+         FROM customer_concerns ORDER BY raised_date`
+    )
+    .all() as (Pick<
+    Concern,
+    "raised_date" | "raised_by" | "description" | "severity" | "status"
+  > & { site_id: number })[];
+
+  const transitions = db
+    .prepare(
+      `SELECT site_id, from_phase, to_phase, transition_date, days_in_previous_phase
+         FROM phase_transitions ORDER BY transition_date`
+    )
+    .all() as (Transition & { site_id: number })[];
+
+  const shiftsByTypePhase = db
+    .prepare(
+      `SELECT s.current_phase AS phase, sh.shift_type, COUNT(*) AS count
+         FROM shifts sh JOIN sites s ON s.site_id = sh.site_id
+        GROUP BY s.current_phase, sh.shift_type
+        ORDER BY s.current_phase, sh.shift_type`
+    )
+    .all() as { phase: number; shift_type: string; count: number }[];
+
+  // Periodised incident counts so the agent can reason about trends, not just totals.
+  const incidentsByMonth = db
+    .prepare(
+      `SELECT strftime('%Y-%m', date) AS month,
+              COUNT(*) AS total,
+              SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) AS critical,
+              SUM(CASE WHEN resolved_remotely = 1 THEN 1 ELSE 0 END) AS resolved_remotely
+         FROM incidents
+        GROUP BY month ORDER BY month`
+    )
+    .all() as {
+    month: string;
+    total: number;
+    critical: number;
+    resolved_remotely: number;
+  }[];
+
+  const incidents = db
+    .prepare(
+      `SELECT site_id, date, category, severity, resolved_remotely
+         FROM incidents ORDER BY date`
+    )
+    .all() as {
+    site_id: number;
+    date: string;
+    category: string;
+    severity: string;
+    resolved_remotely: number;
+  }[];
+
+  const byId = <T extends { site_id: number }>(rows: T[], id: number) =>
+    rows.filter((r) => r.site_id === id);
+
+  return {
+    referenceDate: REFERENCE_DATE,
+    phaseCriteria: {
+      "1to2": "30+ days operating, avg autonomy >= 80%, no unresolved customer concerns",
+      "2to3": "60+ days in Phase 2, avg autonomy >= 90%, >= 50% of incidents resolved remotely",
+      "3to4": "90+ days in Phase 3, avg autonomy >= 95%, no critical incidents in the last 30 days",
+    },
+    coverageByPhase: {
+      "1": "Daily 4am shifts on-site, full daytime support",
+      "2": "On-call 4am rotation (one person covers three sites), reduced daytime",
+      "3": "Remote monitoring, in-person only for exceptions",
+      "4": "Weekly check-ins",
+    },
+    phaseDistribution: getPhaseDistribution(),
+    shiftsByTypePhase,
+    incidentsByMonth,
+    sites: summaries.map((s) => ({
+      site_id: s.site_id,
+      site_name: s.site_name,
+      customer: s.customer_name,
+      store_format: s.store_format,
+      area: s.area,
+      city: s.city,
+      current_phase: s.current_phase,
+      deployment_date: s.deployment_date,
+      days_operating: s.daysOperating,
+      days_in_current_phase: s.daysInCurrentPhase,
+      robot_count: s.robotCount,
+      avg_autonomy: Number(s.avgAutonomy.toFixed(3)),
+      open_concerns: s.openConcerns,
+      open_blockers: s.openBlockers,
+      remote_resolution_rate: Number(s.metrics.remoteResolutionRate.toFixed(3)),
+      total_incidents: s.metrics.totalIncidents,
+      critical_incidents_30d: s.metrics.criticalIncidents30d,
+      readiness: {
+        next_phase: s.readiness.nextPhase,
+        ready_now: s.readiness.ready,
+        criteria_met: `${s.readiness.metCount}/${s.readiness.total}`,
+        proximity: Number(s.readiness.proximity.toFixed(3)),
+        criteria: s.readiness.criteria.map((c) => ({
+          label: c.label,
+          current: c.current,
+          required: c.required,
+          met: c.met,
+        })),
+      },
+      robots: byId(robots, s.site_id).map((r) => ({
+        robot_id: r.robot_id,
+        model: r.model,
+        status: r.status,
+        autonomy_score: r.autonomy_score,
+      })),
+      blockers: byId(blockers, s.site_id).map((b) => ({
+        description: b.blocker_description,
+        metric: b.target_metric,
+        current: b.current_value,
+        required: b.required_value,
+        est_resolution: b.estimated_resolution_date,
+      })),
+      open_concern_details: byId(concerns, s.site_id)
+        .filter((c) => c.status === "open")
+        .map((c) => ({
+          description: c.description,
+          severity: c.severity,
+          raised_by: c.raised_by,
+        })),
+      incidents: byId(incidents, s.site_id).map((i) => ({
+        date: i.date,
+        category: i.category,
+        severity: i.severity,
+        resolved_remotely: i.resolved_remotely === 1,
+      })),
+      phase_history: byId(transitions, s.site_id).map((t) => ({
+        from_phase: t.from_phase,
+        to_phase: t.to_phase,
+        date: t.transition_date,
+        days_in_previous_phase: t.days_in_previous_phase,
+      })),
+    })),
+  };
+}
+
+export type AgentContext = ReturnType<typeof getAgentContext>;

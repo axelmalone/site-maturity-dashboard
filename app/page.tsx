@@ -3,6 +3,7 @@ import { REFERENCE_DATE } from "@/lib/config";
 import { PhaseDistribution } from "@/components/PhaseDistribution";
 import { SitesTable } from "@/components/SitesTable";
 import { ReadyToProgress } from "@/components/ReadyToProgress";
+import { ChatPanel } from "@/components/ChatPanel";
 
 // Read live from the seeded SQLite database at request time.
 export const dynamic = "force-dynamic";
@@ -25,12 +26,17 @@ export default function Home() {
         <h1 className="text-3xl font-semibold">Site Maturity Dashboard</h1>
         <p className="text-muted-foreground max-w-2xl text-sm">
           Where each customer site sits in its deployment maturity, and what
-          would unlock the next phase. Less time on site at 4am becomes visible
+          would clear the path to the next phase. Less time on site at 4am becomes visible
           once you can see which sites are close to progressing. Synthetic data,
           real data model. Reference date{" "}
           <span className="font-mono">{REFERENCE_DATE}</span>.
         </p>
       </header>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Ask the dashboard</h2>
+        <ChatPanel />
+      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Phase distribution</h2>
