@@ -35,14 +35,14 @@ Vault (sibling, separate concern): `/Users/axelmalone/Claude/Second Brain/`
 - **Styling:** Tailwind + Shadcn UI
 - **Database:** SQLite via `better-sqlite3` (synchronous, no ORM)
 - **Backend:** Next.js API routes
-- **Agent runtime:** OpenAI SDK + **GPT-5** server-side
+- **Agent runtime:** OpenAI SDK + **GPT-5 mini** (`gpt-5-mini`) server-side
 - **Hosting:** Railway
 - **Package manager:** npm
 - **NO auth, NO user management, NO test suite, NO CI** — protect time budget. Production would need all four; the prototype scope explicitly doesn't.
 
-## Runtime — agent uses OpenAI / GPT-5 (not Claude)
+## Runtime — agent uses OpenAI / GPT-5 mini (not Claude)
 
-The agent layer uses OpenAI's GPT-5 via the OpenAI SDK, server-side. Tactical choice: Axel has an OpenAI API key, does not have an Anthropic key, and the weekend budget cannot absorb provisioning new API access.
+The agent layer uses OpenAI's GPT-5 mini (`gpt-5-mini`) via the OpenAI SDK, server-side. Tactical choice: Axel has an OpenAI API key, does not have an Anthropic key, and the weekend budget cannot absorb provisioning new API access. Mini chosen over full GPT-5: grounded Q&A over a small dataset doesn't need the larger model, and it keeps the bill down. README copy says "GPT-5 mini" to match.
 
 **Implementation:** key lives in Railway env vars (`OPENAI_API_KEY`) and Next.js API route at `/api/chat` calls OpenAI server-side. Browser NEVER sees the key. Reviewers use the deployed URL without needing their own key.
 
@@ -94,7 +94,7 @@ These map directly to the README's *"What this tool does"* bullets + agent test 
 2. **Site detail (`/sites/[id]`)** — for each site: phase + days in phase, robots + their autonomy, recent incidents (last 30 days), open customer concerns, phase blockers (what's stopping next-phase progression), phase transition history.
 3. **Ready-to-progress surface (`/ready` or main page section)** — sites where derived should-be-phase > stored current_phase. This is the "Flags sites ready to progress" bullet — the differentiator surface.
 4. **Blockers view (`/blockers` or section)** — every active blocker across all sites, ordered by proximity to resolution (sites closest to next phase first).
-5. **Chat interface (sticky panel or `/chat`)** — natural-language queries to GPT-5 grounded in dashboard data. Must answer the 7 question categories from the README.
+5. **Chat interface (sticky panel or `/chat`)** — natural-language queries to GPT-5 mini grounded in dashboard data. Must answer the 7 question categories from the README.
 
 If time runs short on Sunday: **agent layer is the differentiator, ship it.** Cut from the dashboard side first (e.g. skip the dedicated blockers view, fold into site detail).
 

@@ -39,7 +39,7 @@ The data model, the phase progression criteria, and the logic that surfaces bloc
 
 ## The agent layer
 
-The dashboard sits behind a chat interface powered by GPT-5. You can ask questions in natural language and get answers grounded in the dashboard's data rather than in model knowledge.
+The dashboard sits behind a chat interface powered by GPT-5 mini. You can ask questions in natural language and get answers grounded in the dashboard's data rather than in model knowledge.
 
 Seven question categories were used to test it:
 
@@ -67,7 +67,7 @@ The categories matter more than the specific questions. A useful agent has to ha
 - **Styling** — Tailwind + Shadcn UI
 - **Database** — SQLite via `better-sqlite3`
 - **Backend** — Next.js API routes
-- **Agent** — OpenAI SDK + GPT-5
+- **Agent** — OpenAI SDK + GPT-5 mini
 - **Hosting** — Railway
 
 No auth, no user management, no test suite, no CI. The prototype scope didn't justify the time. Production would need all four.
