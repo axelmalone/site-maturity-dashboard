@@ -74,7 +74,7 @@ No auth, no user management, no test suite, no CI. The prototype scope didn't ju
 
 ## Live demo
 
-The deployed version runs at `[Railway URL]`. Dashboard and agent both work without setup. The agent calls OpenAI server-side using a configured API key, so nothing is needed on the reviewer's end.
+The deployed version runs at https://site-maturity-dashboard-production.up.railway.app. Dashboard and agent both work without setup. The agent calls OpenAI server-side using a configured API key, so nothing is needed on the reviewer's end.
 
 To run locally:
 
